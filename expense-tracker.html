@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ledger — Personal Finance</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root[data-theme="light"] {
+    --bg-primary: #F5F2ED;
+    --bg-secondary: #EDEAE3;
+    --bg-card: #FAF8F5;
+    --bg-input: #EDEAE3;
+    --bg-modal: #FAF8F5;
+    --border: #D8D2C7;
+    --border-subtle: #E5E0D8;
+    --text-primary: #1A1814;
+    --text-secondary: #6B6560;
+    --text-muted: #9E9890;
+    --accent: #2C2420;
+    --accent-warm: #8B6F5E;
+    --inflow: #3D5A47;
+    --outflow: #7A3B2E;
+    --inflow-bg: #EDF2EF;
+    --outflow-bg: #F5EEEC;
+    --shadow: rgba(26, 24, 20, 0.08);
+    --shadow-strong: rgba(26, 24, 20, 0.14);
+    --toggle-bg: #D8D2C7;
+    --toggle-dot: #FAF8F5;
+  }
+
+:root[data-theme=“dark”] {
+–bg-primary: #141210;
+–bg-secondary: #1C1916;
+–bg-card: #201D1A;
+–bg-input: #1C1916;
+–bg-modal: #201D1A;
+–border: #312D28;
+–border-subtle: #272320;
+–text-primary: #EDE8E0;
+–text-secondary: #857E74;
+–text-muted: #52504A;
+–accent: #D4CEC5;
+–accent-warm: #A08070;
+–inflow: #5A8A6A;
+–outflow: #A06050;
+–inflow-bg: #1A2820;
+–outflow-bg: #281A18;
+–shadow: rgba(0, 0, 0, 0.3);
+–shadow-strong: rgba(0, 0, 0, 0.5);
+–toggle-bg: #3A3530;
+–toggle-dot: #D4CEC5;
+}
+
+- {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+  }
+
+body {
+font-family: ‘DM Mono’, monospace;
+background: var(–bg-primary);
+color: var(–text-primary);
+min-height: 100vh;
+transition: background 0.4s ease, color 0.4s ease;
+}
+
+/* –– HEADER –– */
+header {
+background: var(–bg-card);
+border-bottom: 1px solid var(–border);
+padding: 0 2rem;
+height: 64px;
+display: flex;
+align-items: center;
+justify-content: space-between;
+position: sticky;
+top: 0;
+z-index: 100;
+transition: background 0.4s ease, border-color 0.4s ease;
+}
+
+.logo {
+font-family: ‘Cormorant Garamond’, serif;
+font-size: 1.6rem;
+font-weight: 500;
+letter-spacing: 0.05em;
+color: var(–text-primary);
+}
+
+.logo span {
+font-style: italic;
+font-weight: 300;
+color: var(–text-secondary);
+font-size: 1rem;
+margin-left: 0.5rem;
+}
+
+.header-right {
+display: flex;
+align-items: center;
+gap: 1.5rem;
+}
+
+/* –– THEME TOGGLE –– */
+.theme-toggle {
+width: 44px;
+height: 24px;
+background: var(–toggle-bg);
+border-radius: 12px;
+position: relative;
+cursor: pointer;
+border: none;
+transition: background 0.3s ease;
+outline: none;
+}
+
+.theme-toggle::after {
+content: ‘’;
+position: absolute;
+width: 18px;
+height: 18px;
+background: var(–toggle-dot);
+border-radius: 50%;
+top: 3px;
+left: 3px;
+transition: transform 0.3s ease, background 0.3s ease;
+}
+
+[data-theme=“dark”] .theme-toggle::after {
+transform: translateX(20px);
+}
+
+.theme-label {
+font-size: 0.65rem;
+letter-spacing: 0.12em;
+text-transform: uppercase;
+color: var(–text-muted);
+}
+
+/* –– MAIN LAYOUT –– */
+.container {
+max-width: 900px;
+margin: 0 auto;
+padding: 2.5rem 1.5rem;
+}
+
+/* –– SUMMARY CARDS –– */
+.summary {
+display: grid;
+grid-template-columns: 1fr 1fr 1fr;
+gap: 1px;
+background: var(–border);
+border: 1px solid var(–border);
+border-radius: 4px;
+overflow: hidden;
+margin-bottom: 2.5rem;
+}
+
+.summary-card {
+background: var(–bg-card);
+padding: 1.5rem 1.75rem;
+transition: background 0.4s ease;
+}
+
+.summary-label {
+font-size: 0.62rem;
+letter-spacing: 0.14em;
+text-transform: uppercase;
+color: var(–text-muted);
+margin-bottom: 0.6rem;
+}
+
+.summary-amount {
+font-family: ‘Cormorant Garamond’, serif;
+font-size: 2rem;
+font-weight: 400;
+letter-spacing: -0.01em;
+line-height: 1;
+}
+
+.summary-amount.net { color: var(–text-primary); }
+.summary-amount.inflow { color: var(–inflow); }
+.summary-amount.outflow { color: var(–outflow); }
+
+.summary-sub {
+font-size: 0.6rem;
+color: var(–text-muted);
+margin-top: 0.35rem;
+letter-spacing: 0.08em;
+}
+
+/* –– ADD TRANSACTION –– */
+.add-section {
+background: var(–bg-card);
+border: 1px solid var(–border);
+border-radius: 4px;
+padding: 1.75rem;
+margin-bottom: 2.5rem;
+transition: background 0.4s ease, border-color 0.4s ease;
+}
+
+.section-title {
+font-family: ‘Cormorant Garamond’, serif;
+font-size: 1.1rem;
+font-weight: 500;
+letter-spacing: 0.04em;
+color: var(–text-secondary);
+margin-bottom: 1.25rem;
+text-transform: uppercase;
+font-size: 0.68rem;
+letter-spacing: 0.16em;
+}
+
+.form-row {
+display: grid;
+grid-template-columns: 1fr 1fr 120px 100px;
+gap: 0.75rem;
+align-items: end;
+}
+
+.form-group {
+display: flex;
+flex-direction: column;
+gap: 0.4rem;
+}
+
+.form-label {
+font-size: 0.6rem;
+letter-spacing: 0.12em;
+text-transform: uppercase;
+color: var(–text-muted);
+}
+
+.form-input, .form-select {
+background: var(–bg-input);
+border: 1px solid var(–border);
+border-radius: 3px;
+padding: 0.65rem 0.85rem;
+font-family: ‘DM Mono’, monospace;
+font-size: 0.82rem;
+color: var(–text-primary);
+outline: none;
+transition: border-color 0.2s ease, background 0.4s ease;
+width: 100%;
+-webkit-appearance: none;
+appearance: none;
+}
+
+.form-input::placeholder {
+color: var(–text-muted);
+}
+
+.form-input:focus, .form-select:focus {
+border-color: var(–accent-warm);
+}
+
+.form-select {
+cursor: pointer;
+background-image: none;
+}
+
+.btn-add {
+background: var(–accent);
+color: var(–bg-primary);
+border: none;
+border-radius: 3px;
+padding: 0.65rem 1.1rem;
+font-family: ‘DM Mono’, monospace;
+font-size: 0.72rem;
+letter-spacing: 0.1em;
+text-transform: uppercase;
+cursor: pointer;
+transition: opacity 0.2s ease, background 0.4s ease;
+white-space: nowrap;
+align-self: flex-end;
+}
+
+.btn-add:hover {
+opacity: 0.8;
+}
+
+/* –– TRANSACTION LIST –– */
+.transactions-section {}
+
+.transactions-header {
+display: flex;
+align-items: center;
+justify-content: space-between;
+margin-bottom: 1rem;
+}
+
+.date-group {
+margin-bottom: 1.5rem;
+}
+
+.date-heading {
+font-size: 0.62rem;
+letter-spacing: 0.14em;
+text-transform: uppercase;
+color: var(–text-muted);
+padding: 0 0 0.6rem;
+border-bottom: 1px solid var(–border-subtle);
+margin-bottom: 0;
+display: flex;
+justify-content: space-between;
+align-items: baseline;
+}
+
+.date-daily-net {
+font-family: ‘Cormorant Garamond’, serif;
+font-size: 0.95rem;
+font-weight: 400;
+}
+
+.transaction-item {
+display: grid;
+grid-template-columns: 1fr auto auto;
+align-items: center;
+gap: 1rem;
+padding: 0.9rem 0;
+border-bottom: 1px solid var(–border-subtle);
+transition: background 0.15s ease;
+animation: slideIn 0.25s ease forwards;
+}
+
+@keyframes slideIn {
+from { opacity: 0; transform: translateY(-6px); }
+to { opacity: 1; transform: translateY(0); }
+}
+
+.transaction-item:last-child {
+border-bottom: none;
+}
+
+.transaction-left {}
+
+.transaction-desc {
+font-size: 0.85rem;
+color: var(–text-primary);
+font-weight: 400;
+margin-bottom: 0.2rem;
+}
+
+.transaction-meta {
+font-size: 0.62rem;
+color: var(–text-muted);
+letter-spacing: 0.06em;
+display: flex;
+gap: 0.75rem;
+}
+
+.transaction-tag {
+padding: 0.15rem 0.5rem;
+border-radius: 2px;
+font-size: 0.58rem;
+letter-spacing: 0.1em;
+text-transform: uppercase;
+font-weight: 500;
+}
+
+.tag-inflow {
+background: var(–inflow-bg);
+color: var(–inflow);
+}
+
+.tag-outflow {
+background: var(–outflow-bg);
+color: var(–outflow);
+}
+
+.transaction-amount {
+font-family: ‘Cormorant Garamond’, serif;
+font-size: 1.25rem;
+font-weight: 500;
+min-width: 110px;
+text-align: right;
+}
+
+.transaction-amount.inflow { color: var(–inflow); }
+.transaction-amount.outflow { color: var(–outflow); }
+
+.transaction-actions {
+display: flex;
+gap: 0.4rem;
+}
+
+.btn-edit, .btn-delete {
+background: none;
+border: 1px solid var(–border);
+border-radius: 2px;
+padding: 0.3rem 0.65rem;
+font-family: ‘DM Mono’, monospace;
+font-size: 0.58rem;
+letter-spacing: 0.1em;
+text-transform: uppercase;
+cursor: pointer;
+transition: all 0.2s ease;
+color: var(–text-secondary);
+}
+
+.btn-edit:hover {
+border-color: var(–accent-warm);
+color: var(–accent-warm);
+}
+
+.btn-delete:hover {
+border-color: var(–outflow);
+color: var(–outflow);
+}
+
+/* –– EMPTY STATE –– */
+.empty-state {
+text-align: center;
+padding: 4rem 2rem;
+color: var(–text-muted);
+font-family: ‘Cormorant Garamond’, serif;
+font-size: 1.1rem;
+font-style: italic;
+letter-spacing: 0.02em;
+}
+
+/* –– MODAL –– */
+.modal-overlay {
+position: fixed;
+inset: 0;
+background: rgba(0,0,0,0.5);
+z-index: 200;
+display: flex;
+align-items: center;
+justify-content: center;
+opacity: 0;
+pointer-events: none;
+transition: opacity 0.25s ease;
+backdrop-filter: blur(2px);
+}
+
+.modal-overlay.open {
+opacity: 1;
+pointer-events: all;
+}
+
+.modal {
+background: var(–bg-modal);
+border: 1px solid var(–border);
+border-radius: 4px;
+padding: 2rem;
+width: 90%;
+max-width: 480px;
+transform: translateY(12px);
+transition: transform 0.25s ease, background 0.4s ease;
+}
+
+.modal-overlay.open .modal {
+transform: translateY(0);
+}
+
+.modal-title {
+font-family: ‘Cormorant Garamond’, serif;
+font-size: 1.4rem;
+font-weight: 500;
+margin-bottom: 1.5rem;
+color: var(–text-primary);
+}
+
+.modal-form-group {
+margin-bottom: 1rem;
+}
+
+.modal-actions {
+display: flex;
+gap: 0.75rem;
+margin-top: 1.5rem;
+justify-content: flex-end;
+}
+
+.btn-cancel {
+background: none;
+border: 1px solid var(–border);
+border-radius: 3px;
+padding: 0.6rem 1.2rem;
+font-family: ‘DM Mono’, monospace;
+font-size: 0.7rem;
+letter-spacing: 0.1em;
+text-transform: uppercase;
+cursor: pointer;
+color: var(–text-secondary);
+transition: border-color 0.2s ease;
+}
+
+.btn-cancel:hover {
+border-color: var(–text-secondary);
+}
+
+.btn-save {
+background: var(–accent);
+color: var(–bg-primary);
+border: none;
+border-radius: 3px;
+padding: 0.6rem 1.5rem;
+font-family: ‘DM Mono’, monospace;
+font-size: 0.7rem;
+letter-spacing: 0.1em;
+text-transform: uppercase;
+cursor: pointer;
+transition: opacity 0.2s ease;
+}
+
+.btn-save:hover {
+opacity: 0.8;
+}
+
+/* –– FILTER BAR –– */
+.filter-bar {
+display: flex;
+gap: 0.5rem;
+margin-bottom: 1.5rem;
+}
+
+.filter-btn {
+background: none;
+border: 1px solid var(–border);
+border-radius: 2px;
+padding: 0.35rem 0.85rem;
+font-family: ‘DM Mono’, monospace;
+font-size: 0.62rem;
+letter-spacing: 0.1em;
+text-transform: uppercase;
+cursor: pointer;
+color: var(–text-muted);
+transition: all 0.2s ease;
+}
+
+.filter-btn.active {
+background: var(–accent);
+color: var(–bg-primary);
+border-color: var(–accent);
+}
+
+/* –– DIVIDER –– */
+.divider {
+height: 1px;
+background: var(–border-subtle);
+margin: 2rem 0;
+}
+
+/* –– RESPONSIVE –– */
+@media (max-width: 680px) {
+.form-row {
+grid-template-columns: 1fr 1fr;
+}
+.form-row .btn-add {
+grid-column: span 2;
+}
+.summary {
+grid-template-columns: 1fr;
+}
+header {
+padding: 0 1rem;
+}
+.container {
+padding: 1.5rem 1rem;
+}
+.transaction-item {
+grid-template-columns: 1fr auto;
+}
+.transaction-amount {
+grid-row: 1;
+grid-column: 2;
+}
+.transaction-actions {
+grid-column: span 2;
+justify-content: flex-end;
+}
+}
+</style>
+
+</head>
+<body>
+
+<header>
+  <div class="logo">Ledger <span>personal finance</span></div>
+  <div class="header-right">
+    <span class="theme-label" id="themeLabel">Day</span>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme"></button>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- SUMMARY -->
+
+  <div class="summary">
+    <div class="summary-card">
+      <div class="summary-label">Total Inflows</div>
+      <div class="summary-amount inflow" id="totalInflow">PKR 0</div>
+      <div class="summary-sub">All recorded income</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-label">Total Outflows</div>
+      <div class="summary-amount outflow" id="totalOutflow">PKR 0</div>
+      <div class="summary-sub">All recorded expenses</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-label">Net Balance</div>
+      <div class="summary-amount net" id="netBalance">PKR 0</div>
+      <div class="summary-sub">Current position</div>
+    </div>
+  </div>
+
+  <!-- ADD TRANSACTION -->
+
+  <div class="add-section">
+    <div class="section-title">Record Transaction</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <input type="text" class="form-input" id="inputDesc" placeholder="e.g. Groceries, Salary...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Amount (PKR)</label>
+        <input type="number" class="form-input" id="inputAmount" placeholder="0.00" min="0" step="0.01">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Date</label>
+        <input type="date" class="form-input" id="inputDate">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Type</label>
+        <select class="form-select" id="inputType">
+          <option value="outflow">Expense</option>
+          <option value="inflow">Inflow</option>
+        </select>
+      </div>
+      <button class="btn-add" onclick="addTransaction()">Add Entry</button>
+    </div>
+  </div>
+
+  <!-- TRANSACTIONS -->
+
+  <div class="transactions-section">
+    <div class="transactions-header">
+      <div class="section-title" style="margin-bottom:0">Transactions</div>
+      <div class="filter-bar">
+        <button class="filter-btn active" onclick="setFilter('all', this)">All</button>
+        <button class="filter-btn" onclick="setFilter('inflow', this)">Inflows</button>
+        <button class="filter-btn" onclick="setFilter('outflow', this)">Expenses</button>
+      </div>
+    </div>
+    <div id="transactionList"></div>
+  </div>
+
+</div>
+
+<!-- EDIT MODAL -->
+
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-title">Edit Transaction</div>
+    <div class="modal-form-group">
+      <label class="form-label">Description</label>
+      <input type="text" class="form-input" id="editDesc" style="margin-top:0.4rem">
+    </div>
+    <div class="modal-form-group">
+      <label class="form-label">Amount (PKR)</label>
+      <input type="number" class="form-input" id="editAmount" min="0" step="0.01" style="margin-top:0.4rem">
+    </div>
+    <div class="modal-form-group">
+      <label class="form-label">Date</label>
+      <input type="date" class="form-input" id="editDate" style="margin-top:0.4rem">
+    </div>
+    <div class="modal-form-group">
+      <label class="form-label">Type</label>
+      <select class="form-select" id="editType" style="margin-top:0.4rem">
+        <option value="outflow">Expense</option>
+        <option value="inflow">Inflow</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" onclick="saveEdit()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ---- DATA ----
+  let transactions = JSON.parse(localStorage.getItem('ledger_txns') || '[]');
+  let editId = null;
+  let currentFilter = 'all';
+
+  // ---- THEME ----
+  const savedTheme = localStorage.getItem('ledger_theme') || 'light';
+  document.documentElement.setAttribute('data-theme', savedTheme);
+  updateThemeLabel(savedTheme);
+
+  document.getElementById('themeToggle').addEventListener('click', () => {
+    const current = document.documentElement.getAttribute('data-theme');
+    const next = current === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('ledger_theme', next);
+    updateThemeLabel(next);
+  });
+
+  function updateThemeLabel(theme) {
+    document.getElementById('themeLabel').textContent = theme === 'light' ? 'Day' : 'Night';
+  }
+
+  // ---- DEFAULT DATE ----
+  function today() {
+    return new Date().toISOString().split('T')[0];
+  }
+  document.getElementById('inputDate').value = today();
+
+  // ---- FORMAT ----
+  function fmt(n) {
+    return 'PKR ' + Math.abs(n).toLocaleString('en-PK', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+  }
+
+  function formatDate(d) {
+    const [y, m, day] = d.split('-');
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const weekdays = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const dt = new Date(y, m-1, day);
+    const isToday = d === today();
+    const label = isToday ? 'Today' : weekdays[dt.getDay()];
+    return `${label}, ${parseInt(day)} ${months[m-1]} ${y}`;
+  }
+
+  // ---- FILTER ----
+  function setFilter(f, btn) {
+    currentFilter = f;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    render();
+  }
+
+  // ---- ADD ----
+  function addTransaction() {
+    const desc = document.getElementById('inputDesc').value.trim();
+    const amount = parseFloat(document.getElementById('inputAmount').value);
+    const date = document.getElementById('inputDate').value;
+    const type = document.getElementById('inputType').value;
+
+    if (!desc) { document.getElementById('inputDesc').focus(); return; }
+    if (!amount || amount <= 0) { document.getElementById('inputAmount').focus(); return; }
+    if (!date) { document.getElementById('inputDate').focus(); return; }
+
+    transactions.push({
+      id: Date.now() + Math.random(),
+      desc, amount, date, type
+    });
+
+    save();
+    document.getElementById('inputDesc').value = '';
+    document.getElementById('inputAmount').value = '';
+    document.getElementById('inputDate').value = today();
+    document.getElementById('inputType').value = 'outflow';
+    render();
+  }
+
+  // ---- DELETE ----
+  function deleteTransaction(id) {
+    transactions = transactions.filter(t => t.id !== id);
+    save();
+    render();
+  }
+
+  // ---- EDIT ----
+  function openEdit(id) {
+    const t = transactions.find(t => t.id === id);
+    if (!t) return;
+    editId = id;
+    document.getElementById('editDesc').value = t.desc;
+    document.getElementById('editAmount').value = t.amount;
+    document.getElementById('editDate').value = t.date;
+    document.getElementById('editType').value = t.type;
+    document.getElementById('editModal').classList.add('open');
+  }
+
+  function closeModal() {
+    document.getElementById('editModal').classList.remove('open');
+    editId = null;
+  }
+
+  function saveEdit() {
+    const t = transactions.find(t => t.id === editId);
+    if (!t) return;
+    const desc = document.getElementById('editDesc').value.trim();
+    const amount = parseFloat(document.getElementById('editAmount').value);
+    const date = document.getElementById('editDate').value;
+    const type = document.getElementById('editType').value;
+
+    if (!desc || !amount || amount <= 0 || !date) return;
+
+    t.desc = desc;
+    t.amount = amount;
+    t.date = date;
+    t.type = type;
+
+    save();
+    closeModal();
+    render();
+  }
+
+  // Close modal on overlay click
+  document.getElementById('editModal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+
+  // ---- SAVE ----
+  function save() {
+    localStorage.setItem('ledger_txns', JSON.stringify(transactions));
+  }
+
+  // ---- RENDER ----
+  function render() {
+    const filtered = currentFilter === 'all'
+      ? transactions
+      : transactions.filter(t => t.type === currentFilter);
+
+    // Summary (always from all)
+    const allInflow = transactions.filter(t => t.type === 'inflow').reduce((s,t) => s+t.amount, 0);
+    const allOutflow = transactions.filter(t => t.type === 'outflow').reduce((s,t) => s+t.amount, 0);
+    const net = allInflow - allOutflow;
+
+    document.getElementById('totalInflow').textContent = fmt(allInflow);
+    document.getElementById('totalOutflow').textContent = fmt(allOutflow);
+    const netEl = document.getElementById('netBalance');
+    netEl.textContent = (net < 0 ? '- ' : '') + fmt(net);
+    netEl.className = 'summary-amount net';
+
+    const list = document.getElementById('transactionList');
+
+    if (filtered.length === 0) {
+      list.innerHTML = '<div class="empty-state">No transactions recorded yet.</div>';
+      return;
+    }
+
+    // Group by date, sorted newest first
+    const grouped = {};
+    filtered.forEach(t => {
+      if (!grouped[t.date]) grouped[t.date] = [];
+      grouped[t.date].push(t);
+    });
+
+    const sortedDates = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
+
+    list.innerHTML = sortedDates.map(date => {
+      const group = grouped[date];
+      const dayInflow = group.filter(t=>t.type==='inflow').reduce((s,t)=>s+t.amount,0);
+      const dayOutflow = group.filter(t=>t.type==='outflow').reduce((s,t)=>s+t.amount,0);
+      const dayNet = dayInflow - dayOutflow;
+
+      const netColor = dayNet >= 0 ? 'var(--inflow)' : 'var(--outflow)';
+      const netSign = dayNet >= 0 ? '+' : '-';
+
+      const items = group.map(t => `
+        <div class="transaction-item">
+          <div class="transaction-left">
+            <div class="transaction-desc">${escHtml(t.desc)}</div>
+            <div class="transaction-meta">
+              <span class="transaction-tag ${t.type === 'inflow' ? 'tag-inflow' : 'tag-outflow'}">${t.type === 'inflow' ? 'Inflow' : 'Expense'}</span>
+            </div>
+          </div>
+          <div class="transaction-amount ${t.type}">${t.type === 'inflow' ? '+' : '-'} ${fmt(t.amount)}</div>
+          <div class="transaction-actions">
+            <button class="btn-edit" onclick="openEdit(${t.id})">Edit</button>
+            <button class="btn-delete" onclick="deleteTransaction(${t.id})">Del</button>
+          </div>
+        </div>
+      `).join('');
+
+      return `
+        <div class="date-group">
+          <div class="date-heading">
+            <span>${formatDate(date)}</span>
+            <span class="date-daily-net" style="color:${netColor}">${netSign} ${fmt(Math.abs(dayNet))}</span>
+          </div>
+          ${items}
+        </div>
+      `;
+    }).join('');
+  }
+
+  function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // Enter key on form
+  ['inputDesc','inputAmount','inputDate'].forEach(id => {
+    document.getElementById(id).addEventListener('keydown', e => {
+      if (e.key === 'Enter') addTransaction();
+    });
+  });
+
+  // ---- INIT ----
+  render();
+</script>
+
+</body>
+</html>
